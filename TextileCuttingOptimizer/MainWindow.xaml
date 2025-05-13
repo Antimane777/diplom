@@ -1,0 +1,97 @@
+﻿<Window x:Class="TextileCuttingOptimizer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+       xmlns:viewModels="clr-namespace:TextileCuttingOptimizer.ViewModels"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    
+    <Window.DataContext>
+        <viewModels:MainViewWindow_mock/>
+    </Window.DataContext>
+
+    <!--<Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        --><!-- Панель управления --><!--
+        <StackPanel Grid.Column="0" Margin="10">
+            <GroupBox Header="Ткань">
+                <ComboBox ItemsSource="{Binding Fabrics}" 
+                          DisplayMemberPath="Name"
+                          SelectedItem="{Binding SelectedFabric}"/>
+            </GroupBox>
+
+            <GroupBox Header="Элементы КПБ" Margin="0,10">
+                <StackPanel>
+                    <Label Content="Наволочки 50x70:"/>
+                    <TextBox Text="{Binding PillowcaseCount}"/>
+
+                    <Label Content="Пододеяльник 1.5сп:"/>
+                    <TextBox Text="{Binding DuvetCoverCount}"/>
+
+                    <Label Content="Простыня:"/>
+                    <TextBox Text="{Binding SheetCount}"/>
+                </StackPanel>
+            </GroupBox>
+
+            <Button Content="Рассчитать" Margin="0,20" Height="30"
+                    Command="{Binding CalculateCommand}"/>
+        </StackPanel>
+
+        --><!-- Визуализация --><!--
+        <Canvas x:Name="CuttingCanvas" Grid.Column="1" Background="White">
+            <Canvas.LayoutTransform>
+                <ScaleTransform ScaleX="1.5" ScaleY="1.5"/>
+            </Canvas.LayoutTransform>
+        </Canvas>
+    </Grid>-->
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Панель управления -->
+        <StackPanel Grid.Column="0" Margin="10">
+            <GroupBox Header="Ткань">
+                <ComboBox ItemsSource="{Binding Fabrics}" 
+                          DisplayMemberPath="Name"
+                          SelectedItem="{Binding SelectedFabric}"/>
+            </GroupBox>
+
+            <GroupBox Header="Наволочки" Margin="0,10">
+                <StackPanel>
+                    <ComboBox ItemsSource="{Binding PillowcaseSizes}"
+                              SelectedItem="{Binding SelectedPillowcaseSize}"/>
+                    <TextBox Text="{Binding PillowcaseCount}" Margin="0,5" 
+                             ToolTip="Количество"/>
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox Header="Пододеяльник" Margin="0,10">
+                <StackPanel>
+                    <ComboBox ItemsSource="{Binding DuvetCoverSizes}"
+                              SelectedItem="{Binding SelectedDuvetCoverSize}"/>
+                    <TextBox Text="{Binding DuvetCoverCount}" Margin="0,5"
+                             ToolTip="Количество"/>
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox Header="Простыня" Margin="0,10">
+                <TextBox Text="{Binding SheetCount}" 
+                         ToolTip="Количество"/>
+            </GroupBox>
+
+            <Button Content="Рассчитать" Margin="0,20" Height="30"
+                    Click="Calculate_Click"/>
+        </StackPanel>
+
+        <!-- Визуализация -->
+        <Canvas x:Name="CuttingCanvas" Grid.Column="1" Background="White"/>
+    </Grid>
+</Window>
