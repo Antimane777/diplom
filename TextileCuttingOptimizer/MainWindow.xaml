@@ -6,7 +6,7 @@
        xmlns:viewModels="clr-namespace:TextileCuttingOptimizer.ViewModels"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    
+
     <Window.DataContext>
         <viewModels:MainViewWindow_mock/>
     </Window.DataContext>
@@ -17,7 +17,9 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        --><!-- Панель управления --><!--
+        -->
+    <!-- Панель управления -->
+    <!--
         <StackPanel Grid.Column="0" Margin="10">
             <GroupBox Header="Ткань">
                 <ComboBox ItemsSource="{Binding Fabrics}" 
@@ -42,7 +44,9 @@
                     Command="{Binding CalculateCommand}"/>
         </StackPanel>
 
-        --><!-- Визуализация --><!--
+        -->
+    <!-- Визуализация -->
+    <!--
         <Canvas x:Name="CuttingCanvas" Grid.Column="1" Background="White">
             <Canvas.LayoutTransform>
                 <ScaleTransform ScaleX="1.5" ScaleY="1.5"/>
@@ -53,11 +57,12 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="300"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="91*"/>
+            <ColumnDefinition Width="409*"/>
         </Grid.ColumnDefinitions>
 
         <!-- Панель управления -->
-        <StackPanel Grid.Column="0" Margin="10">
+        <StackPanel Grid.Column="0" Margin="10,10,10,10">
             <GroupBox Header="Ткань">
                 <ComboBox ItemsSource="{Binding Fabrics}" 
                           DisplayMemberPath="Name"
@@ -87,11 +92,13 @@
                          ToolTip="Количество"/>
             </GroupBox>
 
-            <Button Content="Рассчитать" Margin="0,20" Height="30"
-                    Click="Calculate_Click"/>
+            <Button Content="Рассчитать" 
+        Margin="0,20" 
+        Height="30"
+        Click="Calculate_Click"/>
         </StackPanel>
 
         <!-- Визуализация -->
-        <Canvas x:Name="CuttingCanvas" Grid.Column="1" Background="White"/>
+        <Canvas x:Name="CuttingCanvas" Grid.Column="1" Background="White" Grid.ColumnSpan="2"/>
     </Grid>
 </Window>

@@ -73,97 +73,168 @@ namespace TextileCuttingOptimizer
 
         private void Calculate_Click(object sender, RoutedEventArgs e)
         {
-            var vm = (MainViewWindow_mock)DataContext;
+            // Получаем ViewModel
+            var viewModel = (MainViewWindow_mock)DataContext;
 
-            // Создаем лекала на основе выбора
+            // Создаем список для хранения всех лекал
             var patterns = new List<Pattern>();
 
-            // Добавляем наволочки
-            for (int i = 0; i < vm.PillowcaseCount; i++)
+            // 1. Добавляем наволочки
+            for (int i = 0; i < viewModel.PillowcaseCount; i++)
             {
-                patterns.Add(CreatePillowcase(vm.SelectedPillowcaseSize));
+                patterns.Add(new Pattern
+                {
+                    Name = "Наволочка " + viewModel.SelectedPillowcaseSize,
+                    Contour = CreateRectangle(50, 70), // Примерные размеры
+                    SeamAllowance = 1.5
+                });
             }
 
-            // Добавляем пододеяльник
-            if (vm.DuvetCoverCount > 0)
+            // 2. Добавляем пододеяльники
+            for (int i = 0; i < viewModel.DuvetCoverCount; i++)
             {
-                patterns.Add(CreateDuvetCover(vm.SelectedDuvetCoverSize));
+                patterns.Add(new Pattern
+                {
+                    Name = "Пододеяльник " + viewModel.SelectedDuvetCoverSize,
+                    Contour = CreateRectangle(150, 200), // Примерные размеры
+                    SeamAllowance = 2.0
+                });
             }
 
-            // Визуализация
+            // 3. Добавляем простыни (это было пропущено)
+            for (int i = 0; i < viewModel.SheetCount; i++)
+            {
+                patterns.Add(new Pattern
+                {
+                    Name = "Простыня",
+                    Contour = CreateRectangle(200, 240), // Примерные размеры
+                    SeamAllowance = 2.5
+                });
+            }
+
+            // Отрисовываем все лекала
             DrawPatterns(patterns);
+
+            // Отладочная информация
+            MessageBox.Show($"Успешно создано:\n" +
+                           $"- Наволочек: {viewModel.PillowcaseCount}\n" +
+                           $"- Пододеяльников: {viewModel.DuvetCoverCount}\n" +
+                           $"- Простыней: {viewModel.SheetCount}");
         }
 
-        private Pattern CreatePillowcase(string size)
-        {
-            switch (size)
-            {
-                case "50×50 см":
-                    return new Pattern { Name = "Наволочка 50×50", Contour = CreateRectangle(50, 50) };
-                case "50×70 см":
-                    return new Pattern { Name = "Наволочка 50×70", Contour = CreateRectangle(50, 70) };
-                case "70×70 см":
-                    return new Pattern { Name = "Наволочка 70×70", Contour = CreateRectangle(70, 70) };
-                default:
-                    throw new ArgumentException("Неизвестный размер");
-            }
-        }
-
-        private Pattern CreateDuvetCover(string size)
-        {
-            switch (size)
-            {
-                case "1.5-спальный":
-                    return new Pattern { Name = "Пододеяльник 1.5сп", Contour = CreateRectangle(150, 200) };
-                case "2-спальный":
-                    return new Pattern { Name = "Пододеяльник 2сп", Contour = CreateRectangle(180, 220) };
-                case "Евро":
-                    return new Pattern { Name = "Пододеяльник Евро", Contour = CreateRectangle(220, 240) };
-                default:
-                    throw new ArgumentException("Неизвестный размер");
-            }
-        }
-
+        // Вспомогательный метод для создания прямоугольного лекала
         private List<Point> CreateRectangle(double width, double height)
         {
             return new List<Point>
-        {
-            new Point(0, 0),
-            new Point(width, 0),
-            new Point(width, height),
-            new Point(0, height)
-        };
+            {
+                new Point(0, 0),
+                new Point(width, 0),
+                new Point(width, height),
+                new Point(0, height)
+            };
         }
 
         private void DrawPatterns(List<Pattern> patterns)
         {
+            // Очищаем холст
             CuttingCanvas.Children.Clear();
-            double currentY = 10;
 
+            // Проверка на пустоту
+            if (patterns == null || patterns.Count == 0)
+            {
+                MessageBox.Show("Нет лекал для отображения");
+                return;
+            }
+
+            double currentY = 20; // Начальная позиция по Y
+            double padding = 20;  // Отступ от краев
+
+            // 1. Отрисовываем "рулон ткани"
+            var fabricWidth = ((MainViewWindow_mock)DataContext).SelectedFabric?.Width ?? 150;
+            var fabricVisual = new Rectangle
+            {
+                Width = fabricWidth + padding * 2,
+                Height = CuttingCanvas.ActualHeight,
+                Fill = Brushes.Beige,
+                Stroke = Brushes.Gray,
+                StrokeThickness = 1
+            };
+            CuttingCanvas.Children.Add(fabricVisual);
+
+            // 2. Отрисовываем все лекала
             foreach (var pattern in patterns)
             {
+                // Пропускаем некорректные лекала
+                if (pattern.Contour == null || pattern.Contour.Count < 3)
+                    continue;
+
+                // Создаем полигон для лекала
                 var polygon = new Polygon
                 {
                     Points = new PointCollection(pattern.Contour),
-                    Fill = Brushes.LightBlue,
+                    Fill = GetPatternBrush(pattern.Name),
                     Stroke = Brushes.Black,
-                    StrokeThickness = 1
+                    StrokeThickness = 0.5,
+                    ToolTip = CreateToolTip(pattern)
                 };
 
-                Canvas.SetLeft(polygon, 50);
+                // Позиционируем на холсте
+                Canvas.SetLeft(polygon, padding);
                 Canvas.SetTop(polygon, currentY);
-                currentY += pattern.Contour.Max(p => p.Y) + 10;
 
+                // Добавляем на холст
                 CuttingCanvas.Children.Add(polygon);
 
-                // Подпись
+                // Добавляем подпись
                 var label = new TextBlock
                 {
                     Text = pattern.Name,
-                    Margin = new Thickness(55, currentY - 20, 0, 0)
+                    Margin = new Thickness(padding + 5, currentY + 5, 0, 0),
+                    FontSize = 10,
+                    Foreground = Brushes.DarkSlateGray,
+                    FontWeight = FontWeights.Bold
                 };
                 CuttingCanvas.Children.Add(label);
+
+                // Смещаем позицию для следующего лекала
+                currentY += pattern.Contour.Max(p => p.Y) + 15;
             }
         }
+
+        private Brush GetPatternBrush(string patternName)
+        {
+            if (patternName.Contains("Наволочка")) return Brushes.LightBlue;
+            if (patternName.Contains("Пододеяльник")) return Brushes.LightGreen;
+            if (patternName.Contains("Простыня")) return Brushes.LightSalmon;
+            return Brushes.LightGray;
+        }
+
+        private ToolTip CreateToolTip(Pattern pattern)
+        {
+            var tooltip = new ToolTip();
+            var stack = new StackPanel();
+
+            stack.Children.Add(new TextBlock
+            {
+                Text = pattern.Name,
+                FontWeight = FontWeights.Bold
+            });
+
+            stack.Children.Add(new TextBlock
+            {
+                Text = $"Размер: {GetSizeString(pattern.Contour)}"
+            });
+
+            tooltip.Content = stack;
+            return tooltip;
+        }
+
+        private string GetSizeString(List<Point> contour)
+        {
+            double width = contour.Max(p => p.X) - contour.Min(p => p.X);
+            double height = contour.Max(p => p.Y) - contour.Min(p => p.Y);
+            return $"{width} × {height} см";
+        }
+
     }
 }
