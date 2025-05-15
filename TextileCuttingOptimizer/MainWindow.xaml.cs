@@ -70,58 +70,112 @@ namespace TextileCuttingOptimizer
         {
             InitializeComponent();
         }
+        
 
         private void Calculate_Click(object sender, RoutedEventArgs e)
         {
             // Получаем ViewModel
             var viewModel = (MainViewWindow_mock)DataContext;
-
-            // Создаем список для хранения всех лекал
-            var patterns = new List<Pattern>();
-
-            // 1. Добавляем наволочки
-            for (int i = 0; i < viewModel.PillowcaseCount; i++)
+            try
             {
-                patterns.Add(new Pattern
-                {
-                    Name = "Наволочка " + viewModel.SelectedPillowcaseSize,
-                    Contour = CreateRectangle(50, 70), // Примерные размеры
-                    SeamAllowance = 1.5
-                });
-            }
+                var fabric = new Fabric { Width = 220, Length = 10 }; // Сатин 220см
+                var patterns = new List<Pattern>();
 
-            // 2. Добавляем пододеяльники
-            for (int i = 0; i < viewModel.DuvetCoverCount; i++)
+                // Создаем лекала на основе выбранных параметров
+                for (int i = 0; i < viewModel.PillowcaseCount; i++)
+                {
+                    patterns.Add(new Pattern
+                    {
+                        Name = "Наволочка " + viewModel.SelectedPillowcaseSize,
+                        Contour = CreateRectangle(50, 70),
+                        SeamAllowance = 1.5
+                    });
+                }
+
+                for (int i = 0; i < viewModel.DuvetCoverCount; i++)
+                {
+                    patterns.Add(new Pattern
+                    {
+                        Name = "Пододеяльник " + viewModel.SelectedDuvetCoverSize,
+                        Contour = CreateRectangle(180, 220),
+                        SeamAllowance = 2.0
+                    });
+                }
+
+                for (int i = 0; i < viewModel.SheetCount; i++)
+                {
+                    patterns.Add(new Pattern
+                    {
+                        Name = "Простыня",
+                        Contour = CreateRectangle(200, 240),
+                        SeamAllowance = 2.5
+                    });
+                }
+
+                var result = new CuttingService().CalculateLayout(fabric, patterns);
+                DrawPatterns(result);
+            }
+            catch (Exception ex)
             {
-                patterns.Add(new Pattern
-                {
-                    Name = "Пододеяльник " + viewModel.SelectedDuvetCoverSize,
-                    Contour = CreateRectangle(150, 200), // Примерные размеры
-                    SeamAllowance = 2.0
-                });
+                MessageBox.Show($"Ошибка: {ex.Message}");
             }
-
-            // 3. Добавляем простыни (это было пропущено)
-            for (int i = 0; i < viewModel.SheetCount; i++)
-            {
-                patterns.Add(new Pattern
-                {
-                    Name = "Простыня",
-                    Contour = CreateRectangle(200, 240), // Примерные размеры
-                    SeamAllowance = 2.5
-                });
-            }
-
-            // Отрисовываем все лекала
-            DrawPatterns(patterns);
-
-            // Отладочная информация
-            MessageBox.Show($"Успешно создано:\n" +
-                           $"- Наволочек: {viewModel.PillowcaseCount}\n" +
-                           $"- Пододеяльников: {viewModel.DuvetCoverCount}\n" +
-                           $"- Простыней: {viewModel.SheetCount}");
         }
 
+        private void DrawPatterns(List<PlacedPattern> placedPatterns)
+        {
+            CuttingCanvas.Children.Clear();
+
+            // Отрисовка рулона ткани
+            var fabricVisual = new Rectangle
+            {
+                Width = 220, // Ширина сатина
+                Height = 1000, // Длина для визуализации
+                Fill = Brushes.Beige,
+                Stroke = Brushes.Gray
+            };
+            CuttingCanvas.Children.Add(fabricVisual);
+
+            // Отрисовка лекал
+            foreach (var item in placedPatterns)
+            {
+                var polygon = new Polygon
+                {
+                    Points = OffsetPoints(item.Pattern.Contour, item.Position),
+                    Fill = GetPatternColor(item.Pattern.Name),
+                    Stroke = Brushes.Black,
+                    StrokeThickness = 1
+                };
+                CuttingCanvas.Children.Add(polygon);
+
+                // Подпись
+                var label = new TextBlock
+                {
+                    Text = item.Pattern.Name,
+                    Margin = new Thickness(item.Position.X + 5, item.Position.Y + 5, 0, 0),
+                    FontSize = 10,
+                    Foreground = Brushes.DarkSlateGray
+                };
+                CuttingCanvas.Children.Add(label);
+            }
+        }
+
+        private PointCollection OffsetPoints(List<Point> contour, Point offset)
+        {
+            var result = new PointCollection();
+            foreach (var point in contour)
+            {
+                result.Add(new Point(point.X + offset.X, point.Y + offset.Y));
+            }
+            return result;
+        }
+
+        private Brush GetPatternColor(string name)
+        {
+            if (name.Contains("Наволочка")) return Brushes.LightBlue;
+            if (name.Contains("Пододеяльник")) return Brushes.LightGreen;
+            if (name.Contains("Простыня")) return Brushes.LightSalmon;
+            return Brushes.LightGray;
+        }
         // Вспомогательный метод для создания прямоугольного лекала
         private List<Point> CreateRectangle(double width, double height)
         {
